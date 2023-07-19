@@ -1,4 +1,5 @@
 from ultralytics import YOLO
+import cv2
 
 GP_MODEL_PATH = "./gp_model.pt"
 GK_MODEL_PATH = "./gk_model.pt"
@@ -27,31 +28,26 @@ def get_bounding_box(results):
     return sorted_boxes[0].xyxyn[0]
 
 
-def predict(img):
+def get_prediction(image):
     gp_model = YOLO(GP_MODEL_PATH)
     gk_model = YOLO(GK_MODEL_PATH)
 
+    img = cv2.imread(image)
     gp_results = gp_model.predict(
         source=img,
         show=True,
-        save=True,
-        save_txt=True,
-        save_conf=True,
         conf=0.5,
         max_det=1,
     )
     gk_results = gk_model.predict(
         source=img,
         show=True,
-        save=True,
-        save_txt=True,
-        save_conf=True,
         conf=0.5,
         max_det=1,
     )
 
     gp_bb = get_bounding_box(gp_results)
-    gk_bb = get_bounding_box(gk_results, gp_bb)
+    gk_bb = get_bounding_box(gk_results)
 
     gp_height = gp_bb[3] - gp_bb[1]
     gk_height = gk_bb[3] - gk_bb[1]
@@ -80,4 +76,4 @@ def predict(img):
 
     print(f"Done - width: {width_ratio}; height: {height_ratio}")
 
-    return get_idx(lr, fb), width_ratio, height_ratio
+    return get_idx(lr, fb), str(width_ratio), str(height_ratio)
