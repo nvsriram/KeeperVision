@@ -1,10 +1,11 @@
 import tempfile
 from flask import Flask, request
 from socket import gethostname, gethostbyname
-from predict import get_prediction
+from predict import KeeperVision
 
 app = Flask(__name__)
 
+KPModel = KeeperVision()
 
 @app.route("/")
 def hello():
@@ -23,7 +24,7 @@ def predict():
         tmp_file.write(img_bytes)
         temp_img_path = tmp_file.name
 
-    idx, x, y = get_prediction(temp_img_path)
+    idx, x, y = KPModel.get_prediction(temp_img_path)
 
     return (
         {
