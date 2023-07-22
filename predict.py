@@ -3,8 +3,8 @@ from ultralytics import YOLO
 
 
 class KeeperVisionModel:
-    GP_MODEL_PATH = "./gp_model.pt"
-    GK_MODEL_PATH = "./gk_model.pt"
+    GP_MODEL_PATH = "./models/yolov8m_custom.pt"
+    GK_MODEL_PATH = "./models/yolov8m.pt"
     FB_POS = 0.8
     FB_THRESHOLD = 0.2
     LR_THRESHOLD = 0.35
