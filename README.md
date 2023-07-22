@@ -5,8 +5,8 @@
 1. Ensure python is installed
 2. Run `pip install -r requirements.txt` to install all dependencies<br />
    **NOTE:** Recommended to use venv before installing dependencies. See below for details on how to set it up
-3. Run the Flask app using `python app.py`. This will run the app on debug mode on the server's IP
-4. **NOTE**: Ensure the Flask app and the client are in the same WLAN to be able to connect to the server's IP as it is otherwise considered a private IP address
+3. Run the Flask app using `python app.py`. This will run the app on debug mode on the server's IP<br />
+**NOTE**: Ensure the Flask app and the client are in the same WLAN to be able to connect to the server's IP as it is otherwise considered a private IP address
 
 **[Optional]** To use venv:
 
