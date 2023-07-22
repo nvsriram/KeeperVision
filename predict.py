@@ -1,9 +1,8 @@
-from ultralytics import YOLO
 import cv2
+from ultralytics import YOLO
 
 
 class KeeperVisionModel:
-
     GP_MODEL_PATH = "./gp_model.pt"
     GK_MODEL_PATH = "./gk_model.pt"
     FB_POS = 0.8
@@ -11,8 +10,8 @@ class KeeperVisionModel:
     LR_THRESHOLD = 0.35
 
     def __init__(self):
-        self.gp_model = YOLO(GP_MODEL_PATH)
-        self.gk_model = YOLO(GK_MODEL_PATH)
+        self.gp_model = YOLO(self.GP_MODEL_PATH)
+        self.gk_model = YOLO(self.GK_MODEL_PATH)
 
     def get_idx(self, lr, fb):
         # F :1
@@ -25,41 +24,83 @@ class KeeperVisionModel:
         # RB:8
         return lr * 3 + fb
 
-
     def get_bounding_box(self, results):
-        if len(results) > 1:
+        if len(results) != 1:
+            print("len", len(results))
             print(results)
         boxes = results[0].boxes
-        sorted_boxes = sorted(boxes, key=lambda x: x.conf, reverse=True)
-        return sorted_boxes[0].xyxyn[0]
+        sorted_boxes = sorted(boxes, key=lambda x: x.conf[0].item(), reverse=True)
+        print("sorted boxes:", len(sorted_boxes), sorted_boxes)
+        return sorted_boxes
 
+    def draw_bounding_boxes(self, img, bbs):
+        for bb in bbs:
+            box = bb.xyxy[0].cpu().numpy()
+            x_min, y_min, x_max, y_max = box[:4]
+            color = (0, 255, 0)
+            thickness = 2
+            cv2.rectangle(
+                img,
+                (int(x_min), int(y_min)),
+                (int(x_max), int(y_max)),
+                color,
+                thickness,
+            )
+
+            text = f"{bb.conf[0].item():.2f}"
+            print(text)
+            font = cv2.FONT_HERSHEY_SIMPLEX
+            font_scale = 0.3
+            text_color = (0, 255, 0)
+            text_thickness = 1
+            cv2.putText(
+                img,
+                text,
+                (int(x_min) + 10, int(y_min) + 10),
+                font,
+                font_scale,
+                text_color,
+                text_thickness,
+            )
+
+        return img
+
+    def predict_executor(self, image, is_gk):
+        model = self.gk_model if is_gk else self.gp_model
+        results = model.predict(
+            source=image,
+            show=True,
+            save=True,
+            save_conf=True,
+            save_txt=True,
+            conf=0.5,
+            max_det=1,
+        )
+        return self.get_bounding_box(results)
 
     def get_prediction(self, image):
         img = cv2.imread(image)
-        gp_results = self.gp_model.predict(
-            source=img,
-            show=True,
-            conf=0.5,
-            max_det=1,
-        )
-        gk_results = self.gk_model.predict(
-            source=img,
-            show=True,
-            conf=0.5,
-            max_det=1,
-        )
+        scale_factor = 0.3
+        img = cv2.resize(img, None, fx=scale_factor, fy=scale_factor)
 
-        gp_bb = self.get_bounding_box(gp_results)
-        gk_bb = self.get_bounding_box(gk_results)
+        print("goalpost")
+        gp_bb = self.predict_executor(img, False)
+        print("goalkeeper")
+        gk_bb = self.predict_executor(img, True)
 
-        gp_height = gp_bb[3] - gp_bb[1]
-        gk_height = gk_bb[3] - gk_bb[1]
-        lwidth = gk_bb[0] - gp_bb[0]
-        rwidth = gp_bb[2] - gk_bb[2]
+        bb_img = self.draw_bounding_boxes(img, gp_bb)
+        cv2.imshow("Bounding Boxes", bb_img)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
+        lwidth = gk_bb[0].xyxyn[0][0] - gp_bb[0].xyxyn[0][0]
+        rwidth = gp_bb[0].xyxyn[0][2] - gk_bb[0].xyxyn[0][2]
 
         lr = fb = 0
         width_ratio = lwidth / rwidth
-        if width_ratio < (1 - LR_THRESHOLD) or width_ratio > (1 + LR_THRESHOLD):
+        if width_ratio < (1 - self.LR_THRESHOLD) or width_ratio > (
+            1 + self.LR_THRESHOLD
+        ):
             # invert directions for goalkeeper's perspective
             if lwidth < rwidth:
                 print("Left")
@@ -68,9 +109,11 @@ class KeeperVisionModel:
                 print("Right")
                 lr = 2
 
-        height_ratio = gk_height / gp_height
-        if height_ratio < (FB_POS - FB_THRESHOLD) or height_ratio > (FB_POS + FB_THRESHOLD):
-            if height_ratio < FB_POS:
+        height_ratio = gk_bb.xywhn[0][3] / gp_bb.xywhn[0][3]
+        if height_ratio < (self.FB_POS - self.FB_THRESHOLD) or height_ratio > (
+            self.FB_POS + self.FB_THRESHOLD
+        ):
+            if height_ratio < self.FB_POS:
                 print("Forward")
                 fb = 1
             else:

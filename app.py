@@ -1,11 +1,12 @@
 import tempfile
 from flask import Flask, request
 from socket import gethostname, gethostbyname
-from predict import KeeperVision
+from predict import KeeperVisionModel
 
 app = Flask(__name__)
 
-KPModel = KeeperVision()
+KPModel = KeeperVisionModel()
+
 
 @app.route("/")
 def hello():
