@@ -3,4 +3,5 @@ instance/
 .webassets-cache
 .vscode/
 venv/
+.env
 runs/**
