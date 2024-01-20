@@ -3,12 +3,23 @@ import tempfile
 from socket import gethostbyname, gethostname
 
 import pymysql
+from dotenv import load_dotenv
 from flask import Flask, request
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.orm import DeclarativeBase, desc
 
 from predict import KeeperVisionModel
 
+load_dotenv()
+
 KPModel = KeeperVisionModel()
+
+
+class Base(DeclarativeBase):
+    pass
+
+
+db = SQLAlchemy(model_class=Base)
 
 app = Flask(__name__)
 
@@ -33,14 +44,33 @@ def get_database_uri():
 
 app.config["SQLALCHEMY_DATABASE_URI"] = get_database_uri()
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = True
-db = SQLAlchemy(app)
+db.init_app(app)
+
+with app.app_context():
+    db.reflect()
+
+
+class Player(db.Model):
+    __table__ = db.metadata.tables["Player"]
+
+
+class SessionStats(db.Model):
+    __table__ = db.metadata.tables["SessionStats"]
+
+
+class Session(db.Model):
+    __table__ = db.metadata.tables["Session"]
+
+
+with app.app_context():
+    players = db.session.execute(db.select(Player)).scalars
+    print(players)
 
 
 # class Player(db.Model):
 #     id = db.Column(db.Integer, primary_key=True)
-#     email = db.Column(db.Text, nullable=False)
+#     email = db.Column(db.Text, nullable=False, unique=True)
 #     username = db.Column(db.Text)
-
 
 # class SessionStats(db.Model):
 #     id = db.Column(db.Integer, primary_key=True)
@@ -63,6 +93,7 @@ db = SQLAlchemy(app)
 #     session_id = db.Column(db.ForeignKey(SessionStats.id), primary_key=True)
 #     player_id = db.Column(
 #         db.ForeignKey(Player.id),
+#         primary_key=True
 #     )
 
 
@@ -90,12 +121,82 @@ def predict():
     )
 
 
+@app.route("/api/register", methods=["POST"])
+def register_user():
+    assert request.method == "POST"
+
+    username = request.body["username"]
+    email = request.body["email"]
+
+    # handle player already exists case
+    # check if autoincrement pk works
+    player = Player(username=username, email=email)
+    # player.username = username
+    # player.email = email
+    db.session.add(player)
+    db.session.commit()
+
+
 @app.route("/api/session", methods=["GET", "POST"])
 def session():
     if request.method == "GET":
-        db.session.query()
+        username = request.body["username"]
+
+        player_id = db.get_or_404(db.select(Player).filter_by(username=username)).id
+        player_sessions = db.select(Session).filter_by(player_id=player_id)
+
+        # join session_stats with session
+        session_stats = db.first_or_404(
+            db.select(player_sessions, SessionStats)
+            .join(SessionStats)
+            .order_by(-SessionStats.session_end)
+            # ).order_by(desc(SessionStats.session_end))
+        )
+
+        return (session_stats, 200)
+
     elif request.method == "POST":
-        pass
+        # extract input data
+        initial_image = request.files["initial_image"]
+        final_image = request.files["final_image"]
+        stats = request.body["session_stats"]
+        username = request.body["username"]
+
+        # upload image to S3
+        initial_image_url = ""
+        final_image_url = ""
+
+        # check if player exists
+        player = db.get_or_404(db.select(Player).filter_by(username=username))
+
+        # commit session stats
+        session_stats = SessionStats()
+        session_stats.session_start = stats.session_start
+        session_stats.session_end = stats.session_end
+        session_stats.initial_image = stats.initial_image
+        session_stats.final_image = stats.final_image
+        session_stats.f = stats.f
+        session_stats.b = stats.b
+        session_stats.l = stats.l
+        session_stats.r = stats.r
+        session_stats.fl = stats.fl
+        session_stats.fr = stats.fr
+        session_stats.bl = stats.bl
+        session_stats.br = stats.br
+        session_stats.s = stats.s
+        db.session.add(session_stats)
+        db.session.commit()
+
+        # get session_id
+
+        # commit the session
+        session = Session()
+        session.player_id = player.id
+        session.session_id = session_stats.id
+        db.session.add(session)
+        db.session.commit()
+
+        return ({"session_id": session.id}, 200)
 
 
 if __name__ == "__main__":
