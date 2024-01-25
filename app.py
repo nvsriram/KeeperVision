@@ -4,9 +4,11 @@ from socket import gethostbyname, gethostname
 
 import pymysql
 from dotenv import load_dotenv
+import json
 from flask import Flask, request
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.orm import DeclarativeBase, desc
+from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.exc import SQLAlchemyError
 
 from predict import KeeperVisionModel
 
@@ -60,11 +62,6 @@ class SessionStats(db.Model):
 
 class Session(db.Model):
     __table__ = db.metadata.tables["Session"]
-
-
-with app.app_context():
-    players = db.session.execute(db.select(Player)).scalars
-    print(players)
 
 
 # class Player(db.Model):
@@ -121,82 +118,113 @@ def predict():
     )
 
 
-@app.route("/api/register", methods=["POST"])
+@app.route("/api/register", methods=["GET", "POST"])
 def register_user():
-    assert request.method == "POST"
+    # check if user specified by 'username' exists
+    if request.method == "GET":
+        # parse request content
+        content = request.json
+        username = content["username"]
+        # check if player exists
+        player = db.session.execute(
+            db.select(Player).filter_by(username=username)
+        ).first()
+        # generate response
+        if not player:
+            return ({"message": f"Player '{username}' does not exist."}, 404)
+        return ({"id": player[0].id}, 200)
 
-    username = request.body["username"]
-    email = request.body["email"]
+    # add user specified by 'username' and 'email' to db
+    elif request.method == "POST":
+        # parse request content
+        content = request.json
+        username = content["username"]
+        email = content["email"]
 
-    # handle player already exists case
-    # check if autoincrement pk works
-    player = Player(username=username, email=email)
-    # player.username = username
-    # player.email = email
-    db.session.add(player)
-    db.session.commit()
+        # add player to db
+        try:
+            player = Player(username=username, email=email)
+            db.session.add(player)
+            db.session.commit()
+        except SQLAlchemyError as e:
+            return ({"message": str(e.__dict__["orig"])}, 400)
+
+        # generate response
+        return ({"id": player.id}, 200)
 
 
 @app.route("/api/session", methods=["GET", "POST"])
 def session():
     if request.method == "GET":
-        username = request.body["username"]
+        # parse request content
+        content = request.json
+        username = content["username"]
 
-        player_id = db.get_or_404(db.select(Player).filter_by(username=username)).id
-        player_sessions = db.select(Session).filter_by(player_id=player_id)
+        # check if player exists
+        player = db.session.execute(
+            db.select(Player).filter_by(username=username)
+        ).first()
+        if not player:
+            return ({"message": f"Player '{username}' does not exist."}, 404)
+
+        player_id = player[0].id
+        # get player_sessions exists
+        player_sessions = db.select(Session).filter_by(player_id=player_id).subquery()
 
         # join session_stats with session
-        session_stats = db.first_or_404(
+        session_stats = db.session.execute(
             db.select(player_sessions, SessionStats)
             .join(SessionStats)
             .order_by(-SessionStats.session_end)
-            # ).order_by(desc(SessionStats.session_end))
-        )
+        ).all()
 
-        return (session_stats, 200)
+        print(session_stats)
+
+        return ({"session_stats": len(session_stats)}, 200)
 
     elif request.method == "POST":
         # extract input data
-        initial_image = request.files["initial_image"]
-        final_image = request.files["final_image"]
-        stats = request.body["session_stats"]
-        username = request.body["username"]
+        # initial_image = request.files["initial_image"]
+        # final_image = request.files["final_image"]
+        content = request.json
+        username = content["username"]
+        stats = json.loads(content["session_stats"])
 
         # upload image to S3
-        initial_image_url = ""
-        final_image_url = ""
+        initial_image_url = "test1"
+        final_image_url = "test2"
 
         # check if player exists
-        player = db.get_or_404(db.select(Player).filter_by(username=username))
+        player = db.session.execute(
+            db.select(Player).filter_by(username=username)
+        ).first()
+        if not player:
+            return ({"message": f"Player '{username}' does not exist."}, 404)
 
         # commit session stats
         session_stats = SessionStats()
-        session_stats.session_start = stats.session_start
-        session_stats.session_end = stats.session_end
-        session_stats.initial_image = stats.initial_image
-        session_stats.final_image = stats.final_image
-        session_stats.f = stats.f
-        session_stats.b = stats.b
-        session_stats.l = stats.l
-        session_stats.r = stats.r
-        session_stats.fl = stats.fl
-        session_stats.fr = stats.fr
-        session_stats.bl = stats.bl
-        session_stats.br = stats.br
-        session_stats.s = stats.s
+        session_stats.session_start = stats.get("session_start")
+        session_stats.session_end = stats.get("session_end")
+        session_stats.initial_image = initial_image_url
+        session_stats.final_image = final_image_url
+        session_stats.f = stats.get("f")
+        session_stats.b = stats.get("b")
+        session_stats.l = stats.get("l")
+        session_stats.r = stats.get("r")
+        session_stats.fl = stats.get("fl")
+        session_stats.fr = stats.get("fr")
+        session_stats.bl = stats.get("bl")
+        session_stats.br = stats.get("br")
+        session_stats.s = stats.get("s")
         db.session.add(session_stats)
         db.session.commit()
 
-        # get session_id
-
         # commit the session
-        session = Session()
-        session.player_id = player.id
-        session.session_id = session_stats.id
+        session = Session(session_id=session_stats.id, player_id=player[0].id)
         db.session.add(session)
         db.session.commit()
 
-        return ({"session_id": session.id}, 200)
+        return ({"id": session.session_id}, 200)
 
 
 if __name__ == "__main__":
