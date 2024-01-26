@@ -1,4 +1,5 @@
 import tempfile
+from concurrent.futures import ThreadPoolExecutor
 from json import loads
 from socket import gethostbyname, gethostname
 
@@ -6,8 +7,9 @@ from flask import request
 from sqlalchemy.exc import SQLAlchemyError
 
 from config import app
-from db import Player, Session, SessionStats
+from db import Player, Session, SessionStats, db
 from predict import KPModel
+from upload import get_object_name, handle_upload
 
 
 @app.route("/api/predict", methods=["POST"])
@@ -91,13 +93,13 @@ def session():
         session_stats = Session.get_player_stats(player_id)
 
         # generate response
-        return ({"session_stats": session_stats}, 200)
+        return ({"player_id": player_id, "session_stats": session_stats}, 200)
 
     elif request.method == "POST":
         # extract input data
-        # initial_image = request.files["initial_image"]
-        # final_image = request.files["final_image"]
-        content = request.json
+        initial_image = request.files["initial_image"]
+        final_image = request.files["final_image"]
+        content = request.form
         username = content.get("username")
         stats = content.get("session_stats")
         if not username:
@@ -105,10 +107,6 @@ def session():
         elif not stats:
             return ({"message": "'session_stats' key missing from body"}, 400)
         stats = loads(stats)
-
-        # TODO: upload image to S3
-        initial_image_url = "test1"
-        final_image_url = "test2"
 
         # check if player exists
         player_id = Player.exists(username)
@@ -120,8 +118,6 @@ def session():
             session_stats = SessionStats.create(
                 session_start=stats.get("session_start"),
                 session_end=stats.get("session_end"),
-                initial_image=initial_image_url,
-                final_image=final_image_url,
                 f=stats.get("f"),
                 b=stats.get("b"),
                 l=stats.get("l"),
@@ -132,6 +128,30 @@ def session():
                 br=stats.get("br"),
                 s=stats.get("s"),
             )
+
+            # handle S3 image upload and session stats url update
+            initial_image_url = get_object_name(
+                "initial", player_id=player_id, session_id=session_stats.id
+            )
+            final_image_url = get_object_name(
+                "final", player_id=player_id, session_id=session_stats.id
+            )
+            with ThreadPoolExecutor(max_workers=2) as executor:
+                initial_future = executor.submit(
+                    handle_upload, initial_image, initial_image_url
+                )
+                final_future = executor.submit(
+                    handle_upload, final_image, final_image_url
+                )
+                initial_res, initial_msg = initial_future.result()
+                if not initial_res:
+                    return ({"message": initial_msg}, 400)
+                session_stats.initial_image = initial_msg
+                final_res, final_msg = final_future.result()
+                if not final_res:
+                    return ({"message": final_msg}, 400)
+                session_stats.final_image = final_msg
+                db.session.commit()
 
             # create session
             session = Session.create(session_id=session_stats.id, player_id=player_id)
