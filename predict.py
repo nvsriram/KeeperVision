@@ -1,7 +1,6 @@
 import cv2
 from ultralytics import YOLO
 
-
 class KeeperVisionModel:
     GP_MODEL_PATH = "./models/yolov8m_custom.pt"
     GK_MODEL_PATH = "./models/yolov8m.pt"
@@ -134,3 +133,5 @@ class KeeperVisionModel:
         print(f"Done - width: {width_ratio}; height: {height_ratio}")
 
         return self.get_idx(lr, fb), str(width_ratio), str(height_ratio)
+
+KPModel = KeeperVisionModel()
