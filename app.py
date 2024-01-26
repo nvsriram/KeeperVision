@@ -44,7 +44,7 @@ def register_user():
         content = request.json
         username = content.get("username")
         if not username:
-            return ({"message": "'username' key missing from body"}, 404)
+            return ({"message": "'username' key missing from body"}, 400)
 
         # check if player exists
         player_id = Player.exists(username)
@@ -61,9 +61,9 @@ def register_user():
         username = content.get("username")
         email = content.get("email")
         if not username:
-            return ({"message": "'username' key missing from body"}, 404)
+            return ({"message": "'username' key missing from body"}, 400)
         elif not email:
-            return ({"message": "'email' key missing from body"}, 404)
+            return ({"message": "'email' key missing from body"}, 400)
 
         try:
             # create player
@@ -82,7 +82,7 @@ def session():
         content = request.json
         username = content.get("username")
         if not username:
-            return ({"message": "'username' key missing from body"}, 404)
+            return ({"message": "'username' key missing from body"}, 400)
 
         # check if player exists
         player_id = Player.exists(username)
@@ -103,9 +103,9 @@ def session():
         username = content.get("username")
         stats = content.get("session_stats")
         if not username:
-            return ({"message": "'username' key missing from body"}, 404)
+            return ({"message": "'username' key missing from body"}, 400)
         elif not stats:
-            return ({"message": "'session_stats' key missing from body"}, 404)
+            return ({"message": "'session_stats' key missing from body"}, 400)
         stats = loads(stats)
 
         # check if player exists
