@@ -41,12 +41,12 @@ def register_user():
         # parse request content
         content = request.json
         username = content["username"]
-        
+
         # check if player exists
         player_id = Player.exists(username)
         if not player_id:
             return ({"message": f"Player '{username}' does not exist."}, 404)
-        
+
         # generate response
         return ({"id": player_id}, 200)
 
@@ -113,26 +113,28 @@ def session():
         try:
             # create session stats
             session_stats_id = SessionStats.create(
-                session_start= stats.get("session_start"),
-                session_end = stats.get("session_end"),
-                initial_image = initial_image_url,
-                final_image = final_image_url,
-                f = stats.get("f"),
-                b = stats.get("b"),
-                l = stats.get("l"),
-                r = stats.get("r"),
-                fl = stats.get("fl"),
-                fr = stats.get("fr"),
-                bl = stats.get("bl"),
-                br = stats.get("br"),
-                s = stats.get("s")
+                session_start=stats.get("session_start"),
+                session_end=stats.get("session_end"),
+                initial_image=initial_image_url,
+                final_image=final_image_url,
+                f=stats.get("f"),
+                b=stats.get("b"),
+                l=stats.get("l"),
+                r=stats.get("r"),
+                fl=stats.get("fl"),
+                fr=stats.get("fr"),
+                bl=stats.get("bl"),
+                br=stats.get("br"),
+                s=stats.get("s"),
             )
 
             # create session
-            session_id = Session.create(session_id=session_stats_id, player_id=player_id)
+            session_id = Session.create(
+                session_id=session_stats_id, player_id=player_id
+            )
         except SQLAlchemyError as e:
             return ({"message": str(e.__dict__["orig"])}, 400)
-        
+
         # generate response
         return ({"id": session_id}, 200)
 
