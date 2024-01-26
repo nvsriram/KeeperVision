@@ -6,7 +6,7 @@ from flask import request
 from sqlalchemy.exc import SQLAlchemyError
 
 from config import app
-from db import Player, Session, SessionStats, db
+from db import Player, Session, SessionStats
 from predict import KPModel
 
 
@@ -57,8 +57,8 @@ def register_user():
         username = content["username"]
         email = content["email"]
 
-        # add player to db
         try:
+            # create player
             player_id = Player.create(username=username, email=email)
             # db.session.add(player)
             # db.session.commit()
@@ -110,26 +110,30 @@ def session():
         if not player_id:
             return ({"message": f"Player '{username}' does not exist."}, 404)
 
-        # commit session stats
-        session_stats_id = SessionStats.create(
-            session_start= stats.get("session_start"),
-            session_end = stats.get("session_end"),
-            initial_image = initial_image_url,
-            final_image = final_image_url,
-            f = stats.get("f"),
-            b = stats.get("b"),
-            l = stats.get("l"),
-            r = stats.get("r"),
-            fl = stats.get("fl"),
-            fr = stats.get("fr"),
-            bl = stats.get("bl"),
-            br = stats.get("br"),
-            s = stats.get("s")
-        )
+        try:
+            # create session stats
+            session_stats_id = SessionStats.create(
+                session_start= stats.get("session_start"),
+                session_end = stats.get("session_end"),
+                initial_image = initial_image_url,
+                final_image = final_image_url,
+                f = stats.get("f"),
+                b = stats.get("b"),
+                l = stats.get("l"),
+                r = stats.get("r"),
+                fl = stats.get("fl"),
+                fr = stats.get("fr"),
+                bl = stats.get("bl"),
+                br = stats.get("br"),
+                s = stats.get("s")
+            )
 
-        # commit the session
-        session_id = Session.create(session_id=session_stats_id, player_id=player_id)
-
+            # create session
+            session_id = Session.create(session_id=session_stats_id, player_id=player_id)
+        except SQLAlchemyError as e:
+            return ({"message": str(e.__dict__["orig"])}, 400)
+        
+        # generate response
         return ({"id": session_id}, 200)
 
 
