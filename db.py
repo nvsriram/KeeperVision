@@ -20,7 +20,7 @@ class BaseMixin(object):
         obj = cls(**kw)
         db.session.add(obj)
         db.session.commit()
-        return obj.id
+        return obj
 
 
 db = SQLAlchemy(model_class=Base)
@@ -56,4 +56,4 @@ class Session(BaseMixin, db.Model):
             .join(SessionStats)
             .order_by(-SessionStats.session_end)
         ).all()
-        return list(map(lambda stats: stats[2], session_stats))
+        return list(map(lambda stats: f"{stats[2]}", session_stats))
