@@ -44,13 +44,21 @@ class Player(BaseMixin, db.Model):
 class SessionStats(BaseMixin, db.Model):
     __table__ = db.metadata.tables["SessionStats"]
 
+    def set_initial_image(self, image_url):
+        self.inital_image = image_url
+        db.session.commit()
+
+    def set_final_image(self, image_url):
+        self.final_image = image_url
+        db.session.commit()
+
 
 class Session(BaseMixin, db.Model):
     __table__ = db.metadata.tables["Session"]
 
     @classmethod
     def get_player_stats(self, player_id: int):
-        player_sessions = db.select(Session).filter_by(player_id=player_id).subquery()
+        player_sessions = db.select(self).filter_by(player_id=player_id).subquery()
         session_stats = db.session.execute(
             db.select(player_sessions, SessionStats)
             .join(SessionStats)
