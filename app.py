@@ -1,71 +1,13 @@
-import json
-import os
+from json import loads
 import tempfile
 from socket import gethostbyname, gethostname
 
-import pymysql
-from dotenv import load_dotenv
-from flask import Flask, request
-from flask_sqlalchemy import SQLAlchemy
+from flask import request
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.orm import DeclarativeBase
 
-from predict import KeeperVisionModel
-
-load_dotenv()
-
-KPModel = KeeperVisionModel()
-
-
-class Base(DeclarativeBase):
-    def as_dict(self):
-       return {c.name: getattr(self, c.name) for c in self.__table__.columns}
-    
-    def __repr__(self):
-        return json.dumps(self.as_dict(), default=str)
-
-
-db = SQLAlchemy(model_class=Base)
-
-app = Flask(__name__)
-
-
-def get_database_uri():
-    # ensure .env is setup properly
-    username = os.getenv("DATABASE_USERNAME")
-    if not username:
-        raise RuntimeError(f"DATABASE_USERNAME is not set")
-    password = os.getenv("DATABASE_PASSWORD")
-    if not password:
-        raise RuntimeError(f"DATABASE_PASSWORD is not set")
-    host = os.getenv("DATABASE_HOST")
-    if not host:
-        raise RuntimeError(f"DATABASE_HOST is not set")
-    dbname = os.getenv("DATABASE_NAME")
-    if not dbname:
-        raise RuntimeError(f"DATABASE_NAME is not set")
-
-    return f"mysql+pymysql://{username}:{password}@{host}/{dbname}?charset=utf8mb4"
-
-
-app.config["SQLALCHEMY_DATABASE_URI"] = get_database_uri()
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = True
-db.init_app(app)
-
-with app.app_context():
-    db.reflect()
-
-
-class Player(db.Model):
-    __table__ = db.metadata.tables["Player"]
-
-class SessionStats(db.Model):
-    __table__ = db.metadata.tables["SessionStats"]
-
-
-class Session(db.Model):
-    __table__ = db.metadata.tables["Session"]
-
+from config import app
+from db import Player, Session, SessionStats, db
+from predict import KPModel
 
 @app.route("/api/predict", methods=["POST"])
 def predict():
@@ -93,21 +35,21 @@ def predict():
 
 @app.route("/api/register", methods=["GET", "POST"])
 def register_user():
-    # check if user specified by 'username' exists
+    # check if player specified by 'username' exists
     if request.method == "GET":
         # parse request content
         content = request.json
         username = content["username"]
+        
         # check if player exists
-        player = db.session.scalars(
-            db.select(Player).filter_by(username=username)
-        ).first()
-        # generate response
-        if not player:
+        player_id = Player.exists(username)
+        if not player_id:
             return ({"message": f"Player '{username}' does not exist."}, 404)
-        return ({"id": player.id}, 200)
+        
+        # generate response
+        return ({"id": player_id}, 200)
 
-    # add user specified by 'username' and 'email' to db
+    # add player specified by 'username' and 'email' to db
     elif request.method == "POST":
         # parse request content
         content = request.json
@@ -134,22 +76,19 @@ def session():
         username = content["username"]
 
         # check if player exists
-        player = db.session.scalars(
-            db.select(Player).filter_by(username=username)
-        ).first()
-        if not player:
+        player_id = Player.exists(username)
+        if not player_id:
             return ({"message": f"Player '{username}' does not exist."}, 404)
 
-        # get player_sessions exists
-        player_sessions = db.select(Session).filter_by(player_id=player.id).subquery()
-
-        # join session_stats with session
+        # get session_stats associated with player
+        player_sessions = db.select(Session).filter_by(player_id=player_id).subquery()
         session_stats = db.session.execute(
             db.select(player_sessions, SessionStats)
             .join(SessionStats)
             .order_by(-SessionStats.session_end)
         ).all()
 
+        # generate response
         return ({"session_stats": list(map(lambda stats: stats[2], session_stats))}, 200)
 
     elif request.method == "POST":
@@ -158,17 +97,15 @@ def session():
         # final_image = request.files["final_image"]
         content = request.json
         username = content["username"]
-        stats = json.loads(content["session_stats"])
+        stats = loads(content["session_stats"])
 
         # upload image to S3
         initial_image_url = "test1"
         final_image_url = "test2"
 
         # check if player exists
-        player = db.session.execute(
-            db.select(Player).filter_by(username=username)
-        ).first()
-        if not player:
+        player_id = Player.exists(username)
+        if not player_id:
             return ({"message": f"Player '{username}' does not exist."}, 404)
 
         # commit session stats
@@ -190,7 +127,7 @@ def session():
         db.session.commit()
 
         # commit the session
-        session = Session(session_id=session_stats.id, player_id=player[0].id)
+        session = Session(session_id=session_stats.id, player_id=player_id)
         db.session.add(session)
         db.session.commit()
 
