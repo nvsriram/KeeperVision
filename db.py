@@ -1,15 +1,18 @@
+from json import dumps
+
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
-from json import dumps
+
 from config import app
+
 
 class Base(DeclarativeBase):
     def as_dict(self):
-       return {c.name: getattr(self, c.name) for c in self.__table__.columns}
-    
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
     def __repr__(self):
         return dumps(self.as_dict(), default=str)
-    
+
 
 class BaseMixin(object):
     @classmethod
@@ -31,11 +34,12 @@ class Player(BaseMixin, db.Model):
     __table__ = db.metadata.tables["Player"]
 
     @classmethod
-    def exists(self, username: str) -> int | None:
+    def exists(self, username: str):
         player = db.session.scalars(
             db.select(self).filter_by(username=username)
         ).first()
         return player.id if player else None
+
 
 class SessionStats(BaseMixin, db.Model):
     __table__ = db.metadata.tables["SessionStats"]

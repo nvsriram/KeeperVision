@@ -1,10 +1,12 @@
+from os import getenv
+
 from dotenv import load_dotenv
 from flask import Flask
-from os import getenv
 
 load_dotenv()
 
 app = Flask(__name__)
+
 
 def get_database_uri():
     # ensure .env is setup properly
@@ -22,6 +24,7 @@ def get_database_uri():
         raise RuntimeError(f"DATABASE_NAME is not set")
 
     return f"mysql+pymysql://{username}:{password}@{host}/{dbname}?charset=utf8mb4"
+
 
 app.config["SQLALCHEMY_DATABASE_URI"] = get_database_uri()
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = True
