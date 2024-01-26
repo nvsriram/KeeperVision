@@ -1,14 +1,14 @@
+import json
 import os
 import tempfile
 from socket import gethostbyname, gethostname
 
 import pymysql
 from dotenv import load_dotenv
-import json
 from flask import Flask, request
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import DeclarativeBase
 
 from predict import KeeperVisionModel
 
@@ -18,7 +18,11 @@ KPModel = KeeperVisionModel()
 
 
 class Base(DeclarativeBase):
-    pass
+    def as_dict(self):
+       return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+    
+    def __repr__(self):
+        return json.dumps(self.as_dict(), default=str)
 
 
 db = SQLAlchemy(model_class=Base)
@@ -55,43 +59,12 @@ with app.app_context():
 class Player(db.Model):
     __table__ = db.metadata.tables["Player"]
 
-
 class SessionStats(db.Model):
     __table__ = db.metadata.tables["SessionStats"]
 
 
 class Session(db.Model):
     __table__ = db.metadata.tables["Session"]
-
-
-# class Player(db.Model):
-#     id = db.Column(db.Integer, primary_key=True)
-#     email = db.Column(db.Text, nullable=False, unique=True)
-#     username = db.Column(db.Text)
-
-# class SessionStats(db.Model):
-#     id = db.Column(db.Integer, primary_key=True)
-#     session_start = db.Column(db.DateTime)
-#     session_end = db.Column(db.DateTime)
-#     initial_image = db.Column(db.Text)
-#     final_image = db.Column(db.Text)
-#     f = db.Column(db.Integer)
-#     b = db.Column(db.Integer)
-#     l = db.Column(db.Integer)
-#     r = db.Column(db.Integer)
-#     fl = db.Column(db.Integer)
-#     fr = db.Column(db.Integer)
-#     bl = db.Column(db.Integer)
-#     br = db.Column(db.Integer)
-#     s = db.Column(db.Integer)
-
-
-# class Session(db.Model):
-#     session_id = db.Column(db.ForeignKey(SessionStats.id), primary_key=True)
-#     player_id = db.Column(
-#         db.ForeignKey(Player.id),
-#         primary_key=True
-#     )
 
 
 @app.route("/api/predict", methods=["POST"])
@@ -126,13 +99,13 @@ def register_user():
         content = request.json
         username = content["username"]
         # check if player exists
-        player = db.session.execute(
+        player = db.session.scalars(
             db.select(Player).filter_by(username=username)
         ).first()
         # generate response
         if not player:
             return ({"message": f"Player '{username}' does not exist."}, 404)
-        return ({"id": player[0].id}, 200)
+        return ({"id": player.id}, 200)
 
     # add user specified by 'username' and 'email' to db
     elif request.method == "POST":
@@ -161,15 +134,14 @@ def session():
         username = content["username"]
 
         # check if player exists
-        player = db.session.execute(
+        player = db.session.scalars(
             db.select(Player).filter_by(username=username)
         ).first()
         if not player:
             return ({"message": f"Player '{username}' does not exist."}, 404)
 
-        player_id = player[0].id
         # get player_sessions exists
-        player_sessions = db.select(Session).filter_by(player_id=player_id).subquery()
+        player_sessions = db.select(Session).filter_by(player_id=player.id).subquery()
 
         # join session_stats with session
         session_stats = db.session.execute(
@@ -178,9 +150,7 @@ def session():
             .order_by(-SessionStats.session_end)
         ).all()
 
-        print(session_stats)
-
-        return ({"session_stats": len(session_stats)}, 200)
+        return ({"session_stats": list(map(lambda stats: stats[2], session_stats))}, 200)
 
     elif request.method == "POST":
         # extract input data
