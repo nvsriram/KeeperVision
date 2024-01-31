@@ -44,14 +44,6 @@ class Player(BaseMixin, db.Model):
 class SessionStats(BaseMixin, db.Model):
     __table__ = db.metadata.tables["SessionStats"]
 
-    def set_initial_image(self, image_url):
-        self.inital_image = image_url
-        db.session.commit()
-
-    def set_final_image(self, image_url):
-        self.final_image = image_url
-        db.session.commit()
-
 
 class Session(BaseMixin, db.Model):
     __table__ = db.metadata.tables["Session"]
