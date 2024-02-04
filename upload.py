@@ -24,6 +24,7 @@ s3_client = boto3.client(
     aws_access_key_id=access_key,
     aws_secret_access_key=secret_access_key,
 )
+expiration = 90 * 24 * 60  # 90 days
 
 
 def handle_upload(image, image_url: str):
@@ -31,6 +32,9 @@ def handle_upload(image, image_url: str):
     with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
         tmp_file.write(img_bytes)
         res, msg = upload_file(tmp_file.name, image_url)
+        if not res:
+            return (False, msg)
+        res, msg = create_presigned_url(image_url)
         if not res:
             return (False, msg)
     return (True, msg)
@@ -42,6 +46,18 @@ def upload_file(file_name, object_name):
     except ClientError as e:
         return (False, e)
     return (True, object_name)
+
+
+def create_presigned_url(object_name):
+    try:
+        presigned_url = s3_client.generate_presigned_url(
+            "get_object",
+            Params={"Bucket": bucket, "Key": object_name},
+            ExpiresIn=expiration,
+        )
+    except ClientError as e:
+        return (False, e)
+    return (True, presigned_url)
 
 
 def get_object_name(prefix: str, player_id: str, session_id: int):
