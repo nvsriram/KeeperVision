@@ -36,15 +36,13 @@ def predict():
     )
 
 
-@app.route("/api/register", methods=["GET", "POST"])
-def register_user():
+@app.route("/api/register/<username>", methods=["GET", "POST"])
+def register_user(username):
     # check if player specified by 'username' exists
     if request.method == "GET":
-        # parse request content
-        content = request.json
-        username = content.get("username")
+        # parse request
         if not username:
-            return ({"message": "'username' key missing from body"}, 400)
+            return ({"message": "'username' missing from url"}, 400)
 
         # check if player exists
         player_id = Player.exists(username)
@@ -57,12 +55,11 @@ def register_user():
     # add player specified by 'username' and 'email' to db
     elif request.method == "POST":
         # parse request content
-        content = request.json
-        username = content.get("username")
-        email = content.get("email")
         if not username:
-            return ({"message": "'username' key missing from body"}, 400)
-        elif not email:
+            return ({"message": "'username' missing from url"}, 400)
+        content = request.json
+        email = content.get("email")
+        if not email:
             return ({"message": "'email' key missing from body"}, 400)
 
         try:
@@ -75,14 +72,12 @@ def register_user():
         return ({"id": player.id}, 200)
 
 
-@app.route("/api/session", methods=["GET", "POST"])
-def session():
+@app.route("/api/session/<username>", methods=["GET", "POST"])
+def session(username):
     if request.method == "GET":
-        # parse request content
-        content = request.json
-        username = content.get("username")
+        # parse request
         if not username:
-            return ({"message": "'username' key missing from body"}, 400)
+            return ({"message": "'username' missing from url"}, 400)
 
         # check if player exists
         player_id = Player.exists(username)
@@ -97,14 +92,13 @@ def session():
 
     elif request.method == "POST":
         # extract input data
+        if not username:
+            return ({"message": "'username' missing from url"}, 400)
         initial_image = request.files["initial_image"]
         final_image = request.files["final_image"]
         content = request.form
-        username = content.get("username")
         stats = content.get("session_stats")
-        if not username:
-            return ({"message": "'username' key missing from body"}, 400)
-        elif not stats:
+        if not stats:
             return ({"message": "'session_stats' key missing from body"}, 400)
         stats = loads(stats)
 
