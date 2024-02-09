@@ -17,14 +17,14 @@
          <td>✅</td>
          <td><code>200</code></td>
          <td>
-            <pre><code class="lang-javascript">{<span class="hljs-attr">"id"</span>: <span class="hljs-string">&lt;player_id&gt;</span>}</code></pre>
+            <pre lang="typescript">{"id": &lt;player_id&gt;}</pre>
          </td>
       </tr>
       <tr>
          <td>❌</td>
          <td><code>404</code></td>
          <td>
-            <pre><code class="lang-javascript">{<span class="hljs-attr">"message"</span>: <span class="hljs-string">"Player &lt;username&gt; does not exist."</span>}</code></pre>
+            <pre lang="typescript">{"message": "Player &lt;username&gt; does not exist."}</pre>
          </td>
       </tr>
    </table> 
@@ -36,7 +36,7 @@
       <tr>
          <th>Body</th>
          <td colspan='4'>
-            <pre><code class="lang-json">{<span class="hljs-attr">"email"</span>: <span class="hljs-string">&lt;email&gt;</span>}</code></pre>
+            <pre lang="typescript">{"email": &lt;email&gt;}</pre>
          </td>
       </tr>
       <tr>
@@ -49,14 +49,14 @@
          <td>✅</td>
          <td><code>200</code></td>
          <td>
-            <pre><code class="lang-json">{<span class="hljs-attr">"id"</span>: <span class="hljs-string">&lt;player_id&gt;</span>}</code></pre>
+            <pre lang="typescript">{"id": &lt;player_id&gt;}</pre>
          </td>
       </tr>
       <tr>
          <td>❌</td>
          <td><code>400</code></td>
          <td>
-            <pre><code class="lang-json">{<span class="hljs-attr">"message"</span>: <span class="hljs-string">"&lt;some error message like duplicate key Integrity error&gt;"</span>}</code></pre>
+            <pre lang="typescript">{"message": "&lt;some error message like duplicate key Integrity error&gt;"}</pre>
          </td>
       </tr>
    </table>
@@ -77,14 +77,14 @@
          <td>✅</td>
          <td><code>200</code></td>
          <td>
-            <pre><code class="lang-json">{<span class="hljs-attr">"player_id"</span>: <span class="hljs-string">&lt;player_id&gt;</span>, <span class="hljs-attr">"session_stats"</span>: <span class="hljs-string">&lt;list of session_stats in desc order of session_end&gt;</span>}</code></pre>
+            <pre lang="typescript">{"player_id": &lt;player_id&gt;, "session_stats": &lt;list of session_stats in desc order of session_end&gt;}</pre>
          </td>
       </tr>
       <tr>
          <td>❌</td>
          <td><code>404</code></td>
          <td>
-            <pre><code class="lang-json">{<span class="hljs-attr">"message"</span>: <span class="hljs-string">"Player &lt;username&gt; does not exist."</span>}</code></pre>
+            <pre lang="typescript">{"message": "Player &lt;username&gt; does not exist."}</pre>
          </td>
       </tr>
    </table> 
@@ -96,7 +96,7 @@
       <tr>
          <th>Body</th>
          <td colspan='4'>
-            <pre><code class="lang-json">{<span class="hljs-attr">"session_stats"</span>: <span class="hljs-string">&lt;session_stats JSON with all the fields&gt;</span>}</code></pre>
+            <pre lang="typescript">{"session_stats": &lt;session_stats JSON with all the fields&gt;}</pre>
          </td>
       </tr>
       <tr>
@@ -122,21 +122,21 @@
          <td>✅</td>
          <td><code>200</code></td>
          <td>
-            <pre><code class="lang-json">{<span class="hljs-attr">"id"</span>: <span class="hljs-string">&lt;session_id&gt;</span>}</code></pre>
+            <pre lang="typescript">{"id": &lt;session_id&gt;}</pre>
          </td>
       </tr>
       <tr>
          <td>❌</td>
          <td><code>400</code></td>
          <td>
-            <pre><code class="lang-json">{<span class="hljs-attr">"message"</span>: <span class="hljs-string">"&lt;some error message like duplicate key Integrity error&gt;"</span>}</code></pre>
+            <pre lang="typescript">{"message": "&lt;some error message like duplicate key Integrity error&gt;"}</pre>
          </td>
       </tr>
       <tr>
          <td>❌</td>
          <td><code>404</code></td>
          <td>
-            <pre><code class="lang-json">{<span class="hljs-attr">"message"</span>: <span class="hljs-string">"Player &lt;username&gt; does not exist."</span>}</code></pre>
+            <pre lang="typescript">{"message": "Player &lt;username&gt; does not exist."}</pre>
          </td>
       </tr>
    </table>
@@ -166,7 +166,7 @@
          <td>✅</td>
          <td><code>200</code></td>
          <td>
-            <pre><code class="lang-json">{<span class="hljs-attr">"idx"</span>: <span class="hljs-string">&lt;idx corresponding to direction to move&gt;</span>, <span class="hljs-attr">"x"</span>: <span class="hljs-string">&lt;offset in x direction&gt;</span>, <span class="hljs-attr">"y"</span>: <span class="hljs-string">&lt;offset in y direction&gt;</span>}</code></pre>
+            <pre lang="typescript">{"idx": &lt;idx corresponding to direction to move&gt;, "x": &lt;offset in x direction&gt;, "y": &lt;offset in y direction&gt;}</pre>
          </td>
       </tr>
    </table>
