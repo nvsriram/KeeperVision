@@ -2,6 +2,7 @@ from os import getenv
 import boto3
 import tempfile
 from botocore.exceptions import ClientError
+from botocore.config import Config
 
 
 def get_s3_config():
@@ -9,22 +10,26 @@ def get_s3_config():
     bucket = getenv("AWS_BUCKET_NAME")
     if not bucket:
         raise RuntimeError(f"AWS_BUCKET_NAME is not set")
+    region = getenv("AWS_REGION")
+    if not region:
+        raise RuntimeError(f"AWS_REGION is not set")
     access_key = getenv("AWS_ACCESS_KEY")
     if not access_key:
         raise RuntimeError(f"AWS_ACCESS_KEY is not set")
     secret_access_key = getenv("AWS_SECRET_ACCESS_KEY")
     if not secret_access_key:
         raise RuntimeError(f"AWS_SECRET_ACCESS_KEY is not set")
-    return bucket, access_key, secret_access_key
+    return bucket, region, access_key, secret_access_key
 
 
-bucket, access_key, secret_access_key = get_s3_config()
+bucket, region, access_key, secret_access_key = get_s3_config()
 s3_client = boto3.client(
     "s3",
     aws_access_key_id=access_key,
     aws_secret_access_key=secret_access_key,
+    config=Config(region_name=region, signature_version="v4"),
 )
-expiration = 90 * 24 * 60  # 90 days
+expiration = 90 * 24 * 60 * 60  # 90 days
 
 
 def handle_upload(image, image_url: str):
