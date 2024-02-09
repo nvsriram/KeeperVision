@@ -9,17 +9,17 @@ import requests
 # start = timeit.default_timer()
 
 # # GET register
-# url = "http://10.6.4.220:5000/api/register"
+url = "http://10.10.108.238:5000/api/register/example_username"
 # data = {"username": "testuser@test.com"}
-# r = requests.get(url, json=data)
-# print(r.json())
+r = requests.get(url)
+print(r.json())
 
-# data = {"usernamed": "example_username"}
+# data = {"username": "example_username"}
 # r = requests.get(url, json=data)
 # print(r.json())
 
 # # POST register
-# data = {"username": "example_username", "email": "example@email.com"}
+data = {"email": "degea@gmail.com"}
 # r = requests.post(url, json=data)
 # print(r.json())
 
@@ -28,9 +28,9 @@ import requests
 # print(r.json())
 
 # GET session
-url = "http://10.6.4.220:5000/api/session"
+# url = "http://127.0.0.1:5000/api/session/example_username"
 # data = {"username": "testuser@test.com"}
-# r = requests.get(url, json=data)
+# r = requests.get(url)
 # print(r.json())
 
 # data = {"username": "example_username"}
@@ -53,14 +53,14 @@ session_stats = {
     "br": 3,
     "s": 5,
 }
-data = {"username": "example_username", "session_stats": json.dumps(session_stats)}
-inital = open("runs/detect/predict/image0.jpg", "rb")
+data = {"session_stats": json.dumps(session_stats)}
+inital = open("images/bus.jpg", "rb")
 files = {
     "initial_image": inital,
-    # "final_image": open("runs/detect/predict2/image0.jpg", "rb"),
+    "final_image": open("images/bus.jpg", "rb"),
 }
-r = requests.post(url, data=data, files=files)
-print(r.json())
+# r = requests.post(url, data=data, files=files)
+# print(r.json())
 
 # data = {"username": "testuser@test.com", "session_stats": json.dumps(session_stats)}
 # r = requests.post(url, json=data)
