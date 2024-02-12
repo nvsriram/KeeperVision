@@ -3,7 +3,7 @@ from json import dumps
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
 
-from config import app
+from config import application
 
 
 class Base(DeclarativeBase):
@@ -24,9 +24,9 @@ class BaseMixin(object):
 
 
 db = SQLAlchemy(model_class=Base)
-db.init_app(app)
+db.init_app(application)
 
-with app.app_context():
+with application.app_context():
     db.reflect()
 
 

@@ -5,7 +5,7 @@ from flask import Flask
 
 load_dotenv()
 
-app = Flask(__name__)
+application = Flask(__name__)
 
 
 def get_database_uri():
@@ -26,5 +26,5 @@ def get_database_uri():
     return f"mysql+pymysql://{username}:{password}@{host}/{dbname}?charset=utf8mb4"
 
 
-app.config["SQLALCHEMY_DATABASE_URI"] = get_database_uri()
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = True
+application.config["SQLALCHEMY_DATABASE_URI"] = get_database_uri()
+application.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = True

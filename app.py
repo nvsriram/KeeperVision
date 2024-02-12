@@ -6,13 +6,13 @@ from socket import gethostbyname, gethostname
 from flask import request
 from sqlalchemy.exc import SQLAlchemyError
 
-from config import app
+from config import application
 from db import Player, Session, SessionStats, db
 from predict import KPModel
 from upload import get_object_name, handle_upload
 
 
-@app.route("/api/predict", methods=["POST"])
+@application.route("/api/predict", methods=["POST"])
 def predict():
     assert request.method == "POST"
 
@@ -36,7 +36,7 @@ def predict():
     )
 
 
-@app.route("/api/register/<username>", methods=["GET", "POST"])
+@application.route("/api/register/<username>", methods=["GET", "POST"])
 def register_user(username):
     # check if player specified by 'username' exists
     if request.method == "GET":
@@ -72,7 +72,7 @@ def register_user(username):
         return ({"id": player.id}, 200)
 
 
-@app.route("/api/session/<username>", methods=["GET", "POST"])
+@application.route("/api/session/<username>", methods=["GET", "POST"])
 def session(username):
     if request.method == "GET":
         # parse request
@@ -159,4 +159,4 @@ def session(username):
 if __name__ == "__main__":
     host = gethostname()
     addr = gethostbyname(host)
-    app.run(debug=True, host=addr)
+    application.run(debug=True, host=addr)
