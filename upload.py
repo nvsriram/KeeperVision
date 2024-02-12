@@ -29,7 +29,7 @@ s3_client = boto3.client(
     aws_secret_access_key=secret_access_key,
     config=Config(region_name=region, signature_version="v4"),
 )
-expiration = 90 * 24 * 60 * 60  # 90 days
+expiration = 90 * 24 * 60  # 90 days
 
 
 def handle_upload(image, image_url: str):
