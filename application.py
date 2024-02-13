@@ -1,5 +1,4 @@
 import tempfile
-from concurrent.futures import ThreadPoolExecutor
 from json import loads
 from socket import gethostbyname, gethostname
 
@@ -127,25 +126,22 @@ def session(username):
             initial_image_url = get_object_name(
                 "initial", player_id=player_id, session_id=session_stats.id
             )
+            initial_future = handle_upload(initial_image, initial_image_url)
+            initial_res, initial_msg = initial_future.result()
+            if not initial_res:
+                return ({"message": initial_msg}, 400)
+            session_stats.initial_image = initial_msg
+
             final_image_url = get_object_name(
                 "final", player_id=player_id, session_id=session_stats.id
             )
-            with ThreadPoolExecutor(max_workers=2) as executor:
-                initial_future = executor.submit(
-                    handle_upload, initial_image, initial_image_url
-                )
-                final_future = executor.submit(
-                    handle_upload, final_image, final_image_url
-                )
-                initial_res, initial_msg = initial_future.result()
-                if not initial_res:
-                    return ({"message": initial_msg}, 400)
-                session_stats.initial_image = initial_msg
-                final_res, final_msg = final_future.result()
-                if not final_res:
-                    return ({"message": final_msg}, 400)
-                session_stats.final_image = final_msg
-                db.session.commit()
+            final_future = handle_upload(final_image, final_image_url)
+            final_res, final_msg = final_future.result()
+            if not final_res:
+                return ({"message": final_msg}, 400)
+            session_stats.final_image = final_msg
+
+            db.session.commit()
 
             # create session
             session = Session.create(session_id=session_stats.id, player_id=player_id)
