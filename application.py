@@ -126,8 +126,7 @@ def session(username):
             initial_image_url = get_object_name(
                 "initial", player_id=player_id, session_id=session_stats.id
             )
-            initial_future = handle_upload(initial_image, initial_image_url)
-            initial_res, initial_msg = initial_future.result()
+            initial_res, initial_msg = handle_upload(initial_image, initial_image_url)
             if not initial_res:
                 return ({"message": initial_msg}, 400)
             session_stats.initial_image = initial_msg
@@ -135,8 +134,7 @@ def session(username):
             final_image_url = get_object_name(
                 "final", player_id=player_id, session_id=session_stats.id
             )
-            final_future = handle_upload(final_image, final_image_url)
-            final_res, final_msg = final_future.result()
+            final_res, final_msg = handle_upload(final_image, final_image_url)
             if not final_res:
                 return ({"message": final_msg}, 400)
             session_stats.final_image = final_msg
