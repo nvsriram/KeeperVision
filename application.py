@@ -25,9 +25,9 @@ def game():
 
     score, _, _ = KPModel.get_prediction(temp_img_path, is_game=True)
 
-    print(score)
+    print("score:", score)
 
-    return (200,)
+    return ({"score": str(score)}, 200)
 
 
 @application.route("/api/predict", methods=["POST"])
