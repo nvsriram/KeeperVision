@@ -101,9 +101,9 @@ class KeeperVisionModel:
 
         bb_img = self.draw_bounding_boxes(img, [gp_bb, gk_bb])
         # TODO: comment out
-        cv2.imshow("Bounding Boxes", bb_img)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+        # cv2.imshow("Bounding Boxes", bb_img)
+        # cv2.waitKey(0)
+        # cv2.destroyAllWindows()
 
         lwidth = gk_bb.xyxyn[0][0] - gp_bb.xyxyn[0][0]
         rwidth = gp_bb.xyxyn[0][2] - gk_bb.xyxyn[0][2]
@@ -137,10 +137,12 @@ class KeeperVisionModel:
         if is_game:
             werror = abs(width_ratio - 1)
             herror = abs(height_ratio - self.FB_POS) / self.FB_POS
+            print("werror:", werror)
+            print("herror:", herror)
             wscore = 1 - werror
             hscore = 1 - herror
-            score = 0.7 * wscore + 0.3 * hscore
-            return score, width_ratio, height_ratio
+            score = 0.3 * wscore + 0.7 * hscore
+            return str(score * 100), width_ratio, height_ratio
         return self.get_idx(lr, fb), str(width_ratio), str(height_ratio)
 
 
