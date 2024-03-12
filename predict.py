@@ -91,7 +91,7 @@ class KeeperVisionModel:
         )
         return self.get_bounding_box(results)
 
-    def get_prediction(self, image):
+    def get_prediction(self, image, is_game=False):
         img = cv2.imread(image)
         scale_factor = 0.3
         img = cv2.resize(img, None, fx=scale_factor, fy=scale_factor)
@@ -100,6 +100,7 @@ class KeeperVisionModel:
         gk_bb = self.predict_executor(img, True)
 
         bb_img = self.draw_bounding_boxes(img, [gp_bb, gk_bb])
+        # TODO: comment out
         cv2.imshow("Bounding Boxes", bb_img)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
@@ -133,6 +134,13 @@ class KeeperVisionModel:
 
         print(f"Done - width: {width_ratio}; height: {height_ratio}")
 
+        if is_game:
+            werror = abs(width_ratio - 1)
+            herror = abs(height_ratio - self.FB_POS) / self.FB_POS
+            wscore = 1 - werror
+            hscore = 1 - herror
+            score = 0.7 * wscore + 0.3 * hscore
+            return score, width_ratio, height_ratio
         return self.get_idx(lr, fb), str(width_ratio), str(height_ratio)
 
 

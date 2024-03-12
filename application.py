@@ -11,6 +11,25 @@ from predict import KPModel
 from upload import get_object_name, handle_upload
 
 
+@application.route("/api/game", methods=["POST"])
+def game():
+    assert request.method == "POST"
+
+    # process image and get idx
+    file = request.files["image"]
+
+    img_bytes = file.read()
+    with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
+        tmp_file.write(img_bytes)
+        temp_img_path = tmp_file.name
+
+    score, _, _ = KPModel.get_prediction(temp_img_path, is_game=True)
+
+    print(score)
+
+    return (200,)
+
+
 @application.route("/api/predict", methods=["POST"])
 def predict():
     assert request.method == "POST"
