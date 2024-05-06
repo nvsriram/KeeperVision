@@ -1,5 +1,8 @@
 # KeeperVision
 
+## Description
+Using computer vision, image processing, and machine learning, KeeperVision would physically guide goalkeepers in real-time to the best position to defend against any incoming shots.
+
 ## API Reference
 
 ### `api/register/<username>`
