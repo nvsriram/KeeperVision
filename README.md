@@ -1,4 +1,4 @@
-# KeeperVision
+![banner](https://github.com/nvsriram/KeeperVision/assets/50625504/56e69ee3-a7d9-413a-85f4-f73253c34675)
 
 ## 💡Motivation
 
