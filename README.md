@@ -1,10 +1,10 @@
 # KeeperVision
 
-## Description
+## 💡Motivation
 
-Using computer vision, image processing, and machine learning, KeeperVision physically guides goalkeepers in real-time to the best position to defend against any incoming shots.
+Soccer is the most popular sport with hundreds of millions of players and fans around the world. Many times, a key save can be the difference between winning and losing a game. KeeperVision is a training tool which aims to help goalkeepers in tackling their greatest hurdle - positioning. Using computer vision, image processing, and machine learning, KeeperVision physically guides goalkeepers in real-time to the best position to defend against any incoming shots.
 
-## API Reference
+## 🌐 API Reference
 
 ### `api/register/<username>`
 
@@ -176,7 +176,7 @@ Using computer vision, image processing, and machine learning, KeeperVision phys
    </table>
 </details>
 
-## Instructions on running locally
+## 💻 Instructions on running locally
 
 1. Ensure python is installed
 2. Run `pip install -r requirements.txt` to install all dependencies<br />
