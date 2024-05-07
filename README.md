@@ -176,6 +176,12 @@ Soccer is the most popular sport with hundreds of millions of players and fans a
    </table>
 </details>
 
+## 📈 Block Diagram
+
+![Block Diagram 2](https://github.com/nvsriram/KeeperVision/assets/50625504/b5c1cec2-a9f0-4b01-8828-41b061232a9e)
+
+
+
 ## 💻 Instructions on running locally
 
 1. Ensure python is installed
