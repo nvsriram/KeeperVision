@@ -4,6 +4,10 @@
 
 Soccer is the most popular sport with hundreds of millions of players and fans around the world. Many times, a key save can be the difference between winning and losing a game. KeeperVision is a training tool which aims to help goalkeepers in tackling their greatest hurdle - positioning. Using computer vision, image processing, and machine learning, KeeperVision physically guides goalkeepers in real-time to the best position to defend against any incoming shots.
 
+## 🚀 Demo
+
+https://github.com/nvsriram/KeeperVision/assets/50625504/f4d87b97-4a0c-4a7a-9e95-1bd64e781f94
+
 ## 🌐 API Reference
 
 ### `api/register/<username>`
